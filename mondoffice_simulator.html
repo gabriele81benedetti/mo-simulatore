@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mondoffice - Simulatore Strategia Revenue vs New Customers</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #1a202c;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #718096;
+            font-size: 14px;
+        }
+
+        .metrics-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .metrics-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .metric-card {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s;
+        }
+
+        .metric-card.highlight {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .metric-label {
+            font-size: 11px;
+            color: #718096;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .metric-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .metric-sub {
+            font-size: 11px;
+            color: #a0aec0;
+            margin-top: 2px;
+        }
+
+        .metric-value.revenue {
+            color: #48bb78;
+        }
+
+        .metric-value.new-customers {
+            color: #667eea;
+        }
+
+        .metric-value.cost {
+            color: #ed8936;
+        }
+
+        .slider-container {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .slider-label {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .slider-wrapper {
+            position: relative;
+            padding: 20px 0;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: linear-gradient(to right, #48bb78 0%, #667eea 100%);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: white;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            border: 3px solid #667eea;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: white;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            border: 3px solid #667eea;
+        }
+
+        .slider-value {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .campaigns-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .campaign-column {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            max-height: 800px;
+            overflow-y: auto;
+        }
+
+        .column-header {
+            position: sticky;
+            top: 0;
+            background: white;
+            padding-bottom: 15px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #e2e8f0;
+            z-index: 10;
+        }
+
+        .column-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .column-title.revenue {
+            color: #48bb78;
+        }
+
+        .column-title.new {
+            color: #667eea;
+        }
+
+        .column-stats {
+            font-size: 13px;
+            color: #718096;
+        }
+
+        .campaign-item {
+            background: #f7fafc;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-left: 4px solid #e2e8f0;
+            transition: all 0.2s;
+        }
+
+        .campaign-item:hover {
+            background: #edf2f7;
+            border-left-color: #667eea;
+        }
+
+        .campaign-item.revenue {
+            border-left-color: #48bb78;
+        }
+
+        .campaign-item.new {
+            border-left-color: #667eea;
+        }
+
+        .campaign-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 8px;
+        }
+
+        .campaign-metrics {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #718096;
+        }
+
+        .campaign-metric {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .campaign-metric-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 2px;
+        }
+
+        .campaign-metric-value {
+            font-weight: 600;
+            color: #1a202c;
+        }
+
+        /* Custom scrollbar */
+        .campaign-column::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .campaign-column::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .campaign-column::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 10px;
+        }
+
+        .campaign-column::-webkit-scrollbar-thumb:hover {
+            background: #a0aec0;
+        }
+
+        @media (max-width: 1024px) {
+            .campaigns-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 Mondoffice - Simulatore Strategia</h1>
+            <p class="subtitle">Bilancia dinamicamente le campagne tra Revenue e New Customer Acquisition</p>
+        </div>
+
+        <div class="metrics-wrapper">
+            <!-- Row 1: Account Totals (Static) -->
+            <div class="metrics-row">
+                <div class="metric-card">
+                    <div class="metric-label">Totale Account Revenue</div>
+                    <div class="metric-value revenue" id="staticTotalRevenue">€0</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Totale Nuovi Clienti</div>
+                    <div class="metric-value new-customers" id="staticTotalNew">0</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Spesa Totale Account</div>
+                    <div class="metric-value cost" id="staticTotalCost">€0</div>
+                </div>
+                <div class="metric-card" id="leadGenCard">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- Row 2: Simulation Split (Dynamic) -->
+            <div class="metrics-row">
+                <!-- Revenue Strategy Bucket -->
+                <div class="metric-card highlight" style="border-left: 4px solid #48bb78">
+                    <div class="metric-label">Investimento Revenue</div>
+                    <div class="metric-value" id="revCost">€0</div>
+                    <div class="metric-sub" id="revCount">0 campagne</div>
+                </div>
+                <div class="metric-card highlight" style="border-left: 4px solid #48bb78">
+                    <div class="metric-label">Revenue Protetta</div>
+                    <div class="metric-value revenue" id="revSecured">€0</div>
+                    <div class="metric-sub" id="revRoas">ROAS 0.0</div>
+                </div>
+
+                <!-- New Strategy Bucket -->
+                <div class="metric-card highlight" style="border-left: 4px solid #667eea">
+                    <div class="metric-label">Investimento New Cust.</div>
+                    <div class="metric-value" id="newCost">€0</div>
+                    <div class="metric-sub" id="newCount">0 campagne</div>
+                </div>
+                <div class="metric-card highlight" style="border-left: 4px solid #667eea">
+                    <div class="metric-label">Nuovi Clienti (Target)</div>
+                    <div class="metric-value new-customers" id="newAcquired">0</div>
+                    <div class="metric-sub" id="newCpa">CPA €0.0</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="slider-container">
+            <label class="slider-label">Target Revenue Minimo (Revenue da proteggere)</label>
+            <div class="slider-wrapper">
+                <input type="range" id="revenueSlider" min="0" max="100" value="80" step="1">
+            </div>
+            <div class="slider-value" id="sliderValue">80% del revenue totale</div>
+            <div <div
+                style="text-align: center; margin-top: 15px; font-size: 13px; color: #4a5568; background: #f7fafc; padding: 15px; border-radius: 8px; display: inline-block; margin-left: auto; margin-right: auto; width: 100%; box-sizing: border-box; border: 1px solid #e2e8f0;">
+                <strong>ℹ️ Come funziona lo Score?</strong><br>
+                È l'indice di "Vocazione alla Revenue". Prendiamo il ROAS e lo <em>"scontiamo"</em> se la campagna porta
+                tanti nuovi clienti.<br>
+                <ul style="text-align: left; margin: 10px auto; max-width: 600px; padding-left: 20px;">
+                    <li><strong>Score Alto (es. 10):</strong> Campagna "Cassaforte". Alto ROAS, pochi nuovi clienti.
+                        Rimane in Revenue.</li>
+                    <li><strong>Score Basso (es. 2):</strong> Campagna "Cacciatore". Anche se ha buon ROAS, porta tanti
+                        nuovi clienti. È la prima a spostarsi su New Customer.</li>
+                </ul>
+                <code
+                    style="background: #edf2f7; padding: 2px 6px; border-radius: 4px;">Formula: Score = ROAS × (1 - %NewB2B)</code>
+            </div>
+        </div>
+
+        <div class="campaigns-grid">
+            <div class="campaign-column">
+                <div class="column-header">
+                    <div class="column-title revenue">💰 Strategia REVENUE</div>
+                    <div class="column-stats" id="revenueStats">Caricamento...</div>
+                </div>
+                <div id="revenueCampaigns"></div>
+            </div>
+
+            <div class="campaign-column">
+                <div class="column-header">
+                    <div class="column-title new">🎯 Strategia NEW CUSTOMERS</div>
+                    <div class="column-stats" id="newStats">Caricamento...</div>
+                </div>
+                <div id="newCampaigns"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="mondoffice_data.js"></script>
+    <script>
+        // Data is loaded from mondoffice_data.js
+
+        let leadGenCampaigns = [];
+        let brandCampaigns = [];
+        let ncaCampaigns = [];
+        let swingCampaigns = [];
+        let allActiveCampaigns = [];
+
+        // Initialize with loaded data
+        function initializeSimulator() {
+            if (typeof campaignsData === 'undefined' || !campaignsData.length) {
+                console.error('Campaign data not loaded');
+                return;
+            }
+
+            // 1. Separate Lead Gen (Zero Revenue)
+            leadGenCampaigns = campaignsData.filter(c => c.value === 0);
+
+            // 2. Filter Revenue Campaigns (Active for simulation)
+            allActiveCampaigns = campaignsData.filter(c => c.value > 0);
+
+            // Calcola i totali statici (usiamo i valori corretti forniti dal cliente)
+            const staticRev = 209422.70; // Totale Acquisto/Vendita (gen‑nov 2025)
+            const staticNew = 11783.21; // Totale GA4 NEW purchase B2B (gen‑nov 2025)
+            const staticCost = allActiveCampaigns.reduce((sum, c) => sum + c.cost, 0);
+
+            document.getElementById('staticTotalRevenue').textContent = '€' + formatNumber(staticRev);
+            document.getElementById('staticTotalNew').textContent = formatNumber(staticNew);
+            document.getElementById('staticTotalCost').textContent = '€' + formatNumber(staticCost);
+
+            // 3. Categorize Revenue Campaigns
+            brandCampaigns = [];
+            ncaCampaigns = [];
+            swingCampaigns = [];
+
+            allActiveCampaigns.forEach(c => {
+                let newRatio = c.newB2BRatio / 100;
+                c.swingScore = c.roas * (1 - newRatio);
+
+                // Fix: Ensure we don't match "NOBRAND" when looking for "BRAND"
+                let nameUpper = c.name.toUpperCase();
+                let isBrand = nameUpper.includes('BRAND') && !nameUpper.includes('NOBRAND');
+
+                if (isBrand) {
+                    c.locked = true;
+                    c.lockType = 'revenue';
+                    brandCampaigns.push(c);
+                } else if (nameUpper.includes('NCA')) {
+                    c.locked = true;
+                    c.lockType = 'new';
+                    ncaCampaigns.push(c);
+                } else {
+                    c.locked = false;
+                    swingCampaigns.push(c);
+                }
+            });
+
+            // Sort Swing campaigns by Score descending
+            swingCampaigns.sort((a, b) => b.swingScore - a.swingScore);
+
+            // Update Lead Gen UI
+            updateLeadGenUI();
+
+            // Initial Simulation
+            updateSimulation();
+        }
+
+        function updateLeadGenUI() {
+            const card = document.getElementById('leadGenCard');
+            card.style.borderLeft = '4px solid #ed8936';
+            card.innerHTML = `
+                <div class="metric-label" style="color: #ed8936">Lead Gen (Escluse)</div>
+                <div class="metric-value" style="color: #ed8936">${leadGenCampaigns.length}</div>
+                <div class="metric-sub">Campagne a zero revenue</div>
+            `;
+        }
+
+        function updateSimulation() {
+            const slider = document.getElementById('revenueSlider');
+            const targetPercentage = parseInt(slider.value);
+
+            // Calculate Total Addressable Revenue
+            const totalAddressableRevenue = allActiveCampaigns.reduce((sum, c) => sum + c.value, 0);
+            const targetRevenue = (totalAddressableRevenue * targetPercentage) / 100;
+
+            // Update slider value display
+            document.getElementById('sliderValue').textContent =
+                `${targetPercentage}% del revenue totale (€${formatNumber(targetRevenue)})`;
+
+            // Allocation Logic
+            let finalRevenueList = [];
+            let finalNewList = [];
+            let currentRevenue = 0;
+
+            // 1. Add Locked Brand Campaigns to Revenue
+            finalRevenueList.push(...brandCampaigns);
+            currentRevenue += brandCampaigns.reduce((sum, c) => sum + c.value, 0);
+
+            // 2. Add Locked NCA Campaigns to New
+            finalNewList.push(...ncaCampaigns);
+
+            // 3. Fill remaining target with Swing Campaigns
+            for (let campaign of swingCampaigns) {
+                if (currentRevenue < targetRevenue) {
+                    finalRevenueList.push(campaign);
+                    currentRevenue += campaign.value;
+                } else {
+                    finalNewList.push(campaign);
+                }
+            }
+
+            // Sort lists
+            finalRevenueList.sort((a, b) => b.value - a.value);
+            // New list: by % New B2B desc (Efficiency)
+            finalNewList.sort((a, b) => b.newB2BRatio - a.newB2BRatio);
+
+            // Calculate Allocation Metrics
+            const revCost = finalRevenueList.reduce((sum, c) => sum + c.cost, 0);
+            const revSecured = finalRevenueList.reduce((sum, c) => sum + c.value, 0);
+            const revRoas = revCost > 0 ? revSecured / revCost : 0;
+
+            const newCost = finalNewList.reduce((sum, c) => sum + c.cost, 0);
+            const newAcquired = finalNewList.reduce((sum, c) => sum + c.newB2B, 0);
+            const newCpa = newAcquired > 0 ? newCost / newAcquired : 0;
+
+            // Update UI Metrics
+            document.getElementById('revCost').textContent = '€' + formatNumber(revCost);
+            document.getElementById('revCount').textContent = finalRevenueList.length + ' campagne';
+            document.getElementById('revSecured').textContent = '€' + formatNumber(revSecured);
+            document.getElementById('revRoas').textContent = 'ROAS ' + revRoas.toFixed(2);
+
+            document.getElementById('newCost').textContent = '€' + formatNumber(newCost);
+            document.getElementById('newCount').textContent = finalNewList.length + ' campagne';
+            document.getElementById('newAcquired').textContent = formatNumber(newAcquired);
+            document.getElementById('newCpa').textContent = 'CPA €' + newCpa.toFixed(2);
+
+            // Update Column Headers
+            document.getElementById('revenueStats').textContent =
+                `Investimento: €${formatNumber(revCost)} • ROAS: ${revRoas.toFixed(2)}`;
+            document.getElementById('newStats').textContent =
+                `Investimento: €${formatNumber(newCost)} • CPA: €${newCpa.toFixed(2)}`;
+
+            // Render Lists
+            renderCampaigns('revenueCampaigns', finalRevenueList, 'revenue');
+            renderCampaigns('newCampaigns', finalNewList, 'new');
+        }
+
+        function renderCampaigns(containerId, campaigns, type) {
+            const container = document.getElementById(containerId);
+
+            container.innerHTML = campaigns.map(campaign => {
+                let badge = '';
+                if (campaign.locked) {
+                    badge = campaign.lockType === 'revenue'
+                        ? '<span style="background:#c6f6d5; color:#22543d; padding:2px 6px; border-radius:4px; font-size:10px; margin-left:8px">🔒 BRAND</span>'
+                        : '<span style="background:#bee3f8; color:#2a4365; padding:2px 6px; border-radius:4px; font-size:10px; margin-left:8px">🔒 NCA</span>';
+                }
+
+                return `
+                <div class="campaign-item ${type}">
+                    <div class="campaign-name">
+                        ${campaign.name}
+                        ${badge}
+                    </div>
+                    <div class="campaign-metrics">
+                        <div class="campaign-metric">
+                            <span class="campaign-metric-label">Cost</span>
+                            <span class="campaign-metric-value">€${formatNumber(campaign.cost)}</span>
+                        </div>
+                        <div class="campaign-metric">
+                            <span class="campaign-metric-label">Revenue</span>
+                            <span class="campaign-metric-value">€${formatNumber(campaign.value)}</span>
+                        </div>
+                        <div class="campaign-metric">
+                            <span class="campaign-metric-label">ROAS</span>
+                            <span class="campaign-metric-value">${campaign.roas.toFixed(2)}</span>
+                        </div>
+                        <div class="campaign-metric">
+                            <span class="campaign-metric-label">New B2B</span>
+                            <span class="campaign-metric-value">${Math.round(campaign.newB2B)}</span>
+                        </div>
+                        <div class="campaign-metric">
+                            <span class="campaign-metric-label">% New</span>
+                            <span class="campaign-metric-value">${campaign.newB2BRatio.toFixed(1)}%</span>
+                        </div>
+                         <div class="campaign-metric" title="Swing Score: ROAS * (1 - %New)">
+                            <span class="campaign-metric-label">Score</span>
+                            <span class="campaign-metric-value">${(campaign.swingScore || 0).toFixed(1)}</span>
+                        </div>
+                    </div>
+                </div>
+            `}).join('');
+        }
+
+        function formatNumber(num) {
+            return Math.round(num).toLocaleString('it-IT');
+        }
+
+        // Event listeners
+        document.getElementById('revenueSlider').addEventListener('input', updateSimulation);
+
+        // Initialize
+        initializeSimulator();
+    </script>
+</body>
+
+</html>
