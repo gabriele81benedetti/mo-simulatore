@@ -1,0 +1,14 @@
+# Sistema macOS / editor temporanei
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.sqlite3
+.env
+*.log
+
+# Output della conversione (rigenererai il .js)
+mondoffice_complete_classification.csv
