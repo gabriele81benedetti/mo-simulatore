@@ -410,9 +410,9 @@
             // 2. Filter Revenue Campaigns (Active for simulation)
             allActiveCampaigns = campaignsData.filter(c => c.value > 0);
 
-            // Calcola i totali statici (usiamo i valori corretti forniti dal cliente)
-            const staticRev = 209422.70; // Totale Acquisto/Vendita (gen‑nov 2025)
-            const staticNew = 11783.21; // Totale GA4 NEW purchase B2B (gen‑nov 2025)
+            // Calcola i totali statici
+            const staticRev = allActiveCampaigns.reduce((sum, c) => sum + c.value, 0);
+            const staticNew = allActiveCampaigns.reduce((sum, c) => sum + c.newB2B, 0);
             const staticCost = allActiveCampaigns.reduce((sum, c) => sum + c.cost, 0);
 
             document.getElementById('staticTotalRevenue').textContent = '€' + formatNumber(staticRev);

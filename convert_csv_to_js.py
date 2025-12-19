@@ -4,7 +4,7 @@ import json
 import csv
 
 # Read the CSV and convert to JSON for the HTML
-csv_file = 'mondoffice_complete_classification.csv'
+csv_file = '/Users/gabriele/Desktop/TEMP/BTA/gabriele/mondoffice_complete_classification.csv'
 output_file = 'mondoffice_data.js'
 
 campaigns = []
