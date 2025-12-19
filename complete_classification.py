@@ -32,7 +32,8 @@ try:
             "campaign.id", 
             "campaign.name", 
             "metrics.cost_micros",
-            "metrics.conversions"
+            "metrics.conversions",
+            "metrics.conversions_value"
         ],
         resource="campaign",
         conditions=[
@@ -53,12 +54,13 @@ try:
         c_name = row['campaign.name']
         cost = int(row.get('metrics.cost_micros', 0)) / 1_000_000
         total_conv_raw = float(row.get('metrics.conversions', 0))
+        total_value_raw = float(row.get('metrics.conversions_value', 0))
         
         campaign_data[c_id] = {
             'name': c_name,
             'total_cost': cost,
-            'total_conversions': 0, # Will recalculate
-            'total_value': 0,       # Will recalculate
+            'total_conversions': total_conv_raw, 
+            'total_value': total_value_raw,       
             'conversion_breakdown': {}
         }
 
@@ -108,18 +110,17 @@ try:
     for c_id, data in campaign_data.items():
         name = data['name']
         cost = data['total_cost']
+        # Use the campaign-level total value as the authoritative revenue
+        final_revenue = data['total_value']
+        final_conversions = data['total_conversions']
         
-        # Extract specific conversion counts & Calculate Correct Revenue
+        # Extract specific conversion counts for classification
         purchases = 0
         new_b2b = 0
         other = 0
         
-        calculated_revenue = 0
-        calculated_conversions = 0
-        
         for action, stats in data['conversion_breakdown'].items():
             conv_count = stats['conversions']
-            conv_val = stats['value']
             
             # CATEGORIZATION
             # Identify NEW B2B only from GA4 stable source
@@ -129,21 +130,16 @@ try:
             
             if is_new_b2b:
                 new_b2b += conv_count
-                # DO NOT ADD VALUE FOR NEW B2B
             elif is_main_purchase:
                 purchases += conv_count
-                calculated_revenue += conv_val # ONLY ADD VALUE FROM MAIN PURCHASE ACTION
             else:
                 other += conv_count
-                # Do not add value from other conversions
             
-            # Total conversions count (sum of all actions)
-            calculated_conversions += conv_count
         
         # Calculate metrics
-        roas = (calculated_revenue / cost) if cost > 0 else 0
-        cpa = (cost / calculated_conversions) if calculated_conversions > 0 else 0
-        new_b2b_ratio = (new_b2b / calculated_conversions * 100) if calculated_conversions > 0 else 0
+        roas = (final_revenue / cost) if cost > 0 else 0
+        cpa = (cost / final_conversions) if final_conversions > 0 else 0
+        new_b2b_ratio = (new_b2b / final_conversions * 100) if final_conversions > 0 else 0
         
         # Auto-classification logic
         campaign_type = "UNKNOWN"
@@ -186,8 +182,8 @@ try:
             'Type': campaign_type,
             'Suggested_Strategy': suggested_strategy,
             'Cost_EUR': round(cost, 2),
-            'Total_Conversions': round(calculated_conversions, 2),
-            'Conv_Value_EUR': round(calculated_revenue, 2),
+            'Total_Conversions': round(final_conversions, 2),
+            'Conv_Value_EUR': round(final_revenue, 2),
             'ROAS': round(roas, 2),
             'CPA_EUR': round(cpa, 2),
             'Purchases': round(purchases, 2),
@@ -216,7 +212,28 @@ try:
     print(f"   {output_file}")
     
     total_rev = sum(c['Conv_Value_EUR'] for c in classified_campaigns)
-    print(f"   Total Revenue Calculated: €{total_rev:,.2f}")
+    total_cost_calc = sum(c['Cost_EUR'] for c in classified_campaigns)
+    
+    print(f"   Total Cost Calculated: €{total_cost_calc:,.2f}")
+    print(f"   Total Revenue Calculated (Filtered): €{total_rev:,.2f}")
+
+    # DEBUG: Analyze all conversion values
+    print("\n--- DEBUG: Conversion Value Breakdown ---")
+    global_breakdown = {}
+    total_raw_value = 0
+    
+    for c_id, data in campaign_data.items():
+        for action, stats in data['conversion_breakdown'].items():
+            val = stats['value']
+            total_raw_value += val
+            if action not in global_breakdown:
+                global_breakdown[action] = 0
+            global_breakdown[action] += val
+            
+    print(f"   RAW TOTAL VALUE (All Actions): €{total_raw_value:,.2f}")
+    print("   Breakdown by Action:")
+    for action, val in global_breakdown.items():
+        print(f"   - {action}: €{val:,.2f}")
 
 except Exception as e:
     print(f"Error: {e}")
