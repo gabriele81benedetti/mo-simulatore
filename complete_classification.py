@@ -20,7 +20,7 @@ try:
 
     today = date.today()
     end_date = today - timedelta(days=1)
-    start_date = date(today.year, 1, 1)
+    start_date = date(today.year, 9, 26)
     
     date_range_str = f"segments.date BETWEEN '{start_date}' AND '{end_date}'"
     
