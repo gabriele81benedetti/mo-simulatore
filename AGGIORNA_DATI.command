@@ -1,11 +1,11 @@
 #!/bin/bash
 
 # Vai nella cartella corretta
-cd /Users/gabriele/Desktop/TEMP/BTA/gabriele/mondoffice-simulatore
+cd "$(dirname "$0")"
 
 echo "=================================================="
 echo "🚀 AGGIORNAMENTO DATI MONDOFFICE"
-echo "📅 Periodo: dal 26 Settembre a Ieri"
+echo "📅 Periodo: dal 26 Settembre al 31 Dicembre 2025"
 echo "=================================================="
 echo ""
 

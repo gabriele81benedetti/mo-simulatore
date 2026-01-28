@@ -4,14 +4,21 @@ import csv
 from datetime import date, timedelta
 
 # Add the google-ads-mcp directory to sys.path
-sys.path.append("/Users/gabriele/Desktop/TEMP/BTA/gabriele/google_ads_mcp")
+# Use absolute path relative to this script
+current_dir = os.path.dirname(os.path.abspath(__file__))
+mcp_path = os.path.join(current_dir, "..", "..", "google_ads_mcp")
+sys.path.insert(0, mcp_path)
 
 # Set the developer token
 os.environ["GOOGLE_ADS_DEVELOPER_TOKEN"] = "z3AZMWAW-b5VXiT0zl3ZMw"
 os.environ["GOOGLE_ADS_LOGIN_CUSTOMER_ID"] = "1215695365"
 
+# Bypass package structure for standalone execution
+tools_path = os.path.join(mcp_path, "ads_mcp", "tools")
+sys.path.insert(0, tools_path)
+
 try:
-    from ads_mcp.tools.search import search
+    from search import search
     
     customer_id = "5668436290"
     
@@ -19,8 +26,8 @@ try:
     print("=" * 120)
 
     today = date.today()
-    end_date = today - timedelta(days=1)
-    start_date = date(today.year, 9, 26)
+    end_date = date(2025, 12, 31)
+    start_date = date(2025, 9, 26)
     
     date_range_str = f"segments.date BETWEEN '{start_date}' AND '{end_date}'"
     
